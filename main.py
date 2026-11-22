@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""news-image-20261122: write the front page to /output/entry.png.
+"""news-image-20261122 (v2r): write the front page to /output/entry.png.
 
 The entry image is the front page "THE WORLD TODAY" for Sunday
-22 November 2026, drawn once and shipped with this repository.
-This program only validates the embedded PNG and copies its bytes
-to the output directory, so two runs write byte-identical files.
-Standard library only, no network.
+22 November 2026, rebuilt for the v2r resubmission: hero text left /
+picture right, a 2x2 grid of supporting stories, a numbers strip and
+a ticker. The picture was composed once (see the builder log) and is
+shipped in this repository as entry.png.
+
+This program does no drawing and no network. It checks the embedded
+PNG against the competition gate (signature, IHDR first, every chunk
+CRC, IEND present, at most 1024x1024, at most 1 MiB, no trailing
+bytes) and then copies its bytes unchanged to the output directory,
+so repeated runs produce byte-identical files. Python 3 standard
+library only.
 """
 
 import binascii
@@ -16,75 +23,90 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "entry.png")
 
-PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+MAX_BYTES = 1048576
+MAX_SIDE = 1024
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
-# A 1x1 white PNG, used only if the embedded image is missing or broken.
+# A 1x1 white PNG, used only when the embedded image cannot be read
+# or fails validation, so the program still writes a valid PNG.
 FALLBACK_PNG = bytes.fromhex(
     "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de"
     "0000000c4944415478da6360000000020001e221bc330000000049454e44ae426082"
 )
 
 
-def check_png(data):
-    """Walk the PNG chunks, verifying structure and every CRC.
+def _read_u32(buf, off):
+    (value,) = struct.unpack(">I", buf[off:off + 4])
+    return value
 
-    Also enforces the competition gate: at most 1024x1024 pixels and
-    at most 1 MiB, so a bad embedded image fails loudly here instead
-    of silently shipping an entry the gate would refuse.
+
+def check_header(data):
+    """Check the signature and the IHDR chunk; return (width, height)."""
+    if len(data) < 8 or data[:8] != PNG_MAGIC:
+        raise ValueError("not a PNG: bad signature")
+    if len(data) > MAX_BYTES:
+        raise ValueError("image over the 1 MiB cap: %d bytes" % len(data))
+    if len(data) < 8 + 8 + 13 + 4:
+        raise ValueError("file too short for an IHDR chunk")
+    if data[12:16] != b"IHDR":
+        raise ValueError("first chunk is not IHDR")
+    (width, height) = struct.unpack(">II", data[16:24])
+    if width < 1 or height < 1:
+        raise ValueError("non-positive dimensions %dx%d" % (width, height))
+    if width > MAX_SIDE or height > MAX_SIDE:
+        raise ValueError("image over the 1024x1024 cap: %dx%d"
+                         % (width, height))
+    return width, height
+
+
+def check_png(data):
+    """Walk every chunk, verifying each CRC, and require a clean IEND.
 
     Raises ValueError on the first problem found.
     """
-    if len(data) > 1048576:
-        raise ValueError("image exceeds the 1 MiB cap (%d bytes)" % len(data))
-    if len(data) < 8 or data[:8] != PNG_SIGNATURE:
-        raise ValueError("not a PNG (bad signature)")
+    check_header(data)
     pos = 8
-    first = True
-    saw_iend = False
+    seen_iend = False
     while pos + 8 <= len(data):
-        (length,) = struct.unpack(">I", data[pos:pos + 4])
+        length = _read_u32(data, pos)
         ctype = data[pos + 4:pos + 8]
+        body_end = pos + 8 + length
         if length > len(data) - pos - 12:
-            raise ValueError("chunk %r overruns the file" % ctype)
-        if first:
-            if ctype != b"IHDR":
-                raise ValueError("IHDR must be the first chunk")
-            (width, height) = struct.unpack(">II", data[pos + 8:pos + 16])
-            if width <= 0 or height <= 0:
-                raise ValueError("non-positive image dimensions")
-            if width > 1024 or height > 1024:
-                raise ValueError(
-                    "image exceeds the 1024x1024 cap (%dx%d)" % (width, height))
-            first = False
-        chunk_end = pos + 8 + length
-        (stored_crc,) = struct.unpack(">I", data[chunk_end:chunk_end + 4])
-        actual_crc = binascii.crc32(data[pos + 4:chunk_end]) & 0xFFFFFFFF
-        if stored_crc != actual_crc:
+            raise ValueError("chunk %r runs past the end of the file"
+                             % ctype)
+        stored = _read_u32(data, body_end)
+        actual = binascii.crc32(data[pos + 4:body_end]) & 0xFFFFFFFF
+        if stored != actual:
             raise ValueError("bad CRC in chunk %r" % ctype)
-        pos = chunk_end + 4
+        pos = body_end + 4
         if ctype == b"IEND":
-            saw_iend = True
+            seen_iend = True
             break
-    if first:
-        raise ValueError("no chunks after the signature")
-    if not saw_iend:
-        raise ValueError("missing IEND chunk")
+    if not seen_iend:
+        raise ValueError("no IEND chunk found")
     if pos != len(data):
-        raise ValueError("trailing bytes after IEND")
+        raise ValueError("%d trailing bytes after IEND"
+                         % (len(data) - pos))
+
+
+def load_image():
+    """Return the embedded bytes after validation, else the fallback."""
+    try:
+        with open(SRC, "rb") as fh:
+            data = fh.read()
+        check_png(data)
+        return data
+    except (OSError, ValueError) as exc:
+        print("embedded image unusable (%s); using fallback" % exc,
+              file=sys.stderr)
+        return FALLBACK_PNG
 
 
 def main():
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     target = os.path.join(out_dir, "entry.png")
-    try:
-        with open(SRC, "rb") as fh:
-            data = fh.read()
-        check_png(data)
-    except (OSError, ValueError) as exc:
-        print("embedded image unusable (%s); writing fallback" % exc,
-              file=sys.stderr)
-        data = FALLBACK_PNG
+    data = load_image()
     with open(target, "wb") as fh:
         fh.write(data)
     print("wrote %s (%d bytes)" % (target, len(data)))
