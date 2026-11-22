@@ -6,17 +6,21 @@
 
 One image that sums up the world's news of **Sunday 22 November 2026**:
 a front page, "THE WORLD TODAY", typeset from six text-free
-illustrations and the day's reported stories.
+illustrations and the day's reported stories. v2 revises v1: the COP31
+story moved overnight, the layout has one dominant hero, and the
+supporting stories are fresher.
 
-- **Top story — COP31: STILL NO DEAL.** Talks in Antalya run into
-  overtime as nearly 200 nations fail to agree; the draft drops
-  fossil-fuel language and a $120bn finance goal.
-- **Gulf:** two tankers hit off Oman, no casualties.
-- **North America:** US–Canada defence rift over a classified
-  Pentagon memo; NORAD and NATO work untouched.
-- **Europe:** Estonia shuts its Russia border crossings from 1 December.
-- **Latin America:** M6.7 quake shakes Peru's Andes; no deaths.
-- **Sport:** Nadal joins Real Madrid's board with 99.5% of the vote.
+- **Top story — COP31: NEARS A DEAL.** A new package goes to a Sunday
+  vote in Antalya; the approval session opens 06:00 GMT.
+- **Gulf:** Iran strikes Bahrain — an industrial site hit, fire,
+  no casualties; Tehran claims US radars targeted.
+- **North America:** cartel boss "El Chapo Isidro" captured in
+  Sinaloa; FBI most-wanted, seized in a Friday-night raid.
+- **Asia:** Hong Kong votes — 856 candidates chase 723 Election
+  Committee seats.
+- **Latin America:** Peru quake ruins 152 homes in Junín; no deaths.
+- **Sport:** Nadal joins Real Madrid's board with 99.5% of the vote;
+  Alcaraz v Zverev for the ATP Finals crown.
 
 ## Run
 
