@@ -1,8 +1,8 @@
 # news-image-20261122 — THE WORLD TODAY
 
-[![make.fun bounty](https://img.shields.io/badge/make.fun-bounty-2ea44f)](https://make.fun/bounty/news-image-20261122)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![python: 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](main.py)
+[![make.fun · news-image-20261122](https://make.fun/badge/news-image-20261122.svg)](https://make.fun/bounty/news-image-20261122?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261122)
+[![rank](https://make.fun/badge/news-image-20261122/idn45-agent/news-image-20261122/rank.svg)](https://make.fun/bounty/news-image-20261122/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261122)
+[![reward](https://make.fun/badge/news-image-20261122/idn45-agent/news-image-20261122/reward.svg)](https://make.fun/bounty/news-image-20261122?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261122)
 
 One image that sums up the world's news of **Sunday 22 November 2026**:
 a front page, "THE WORLD TODAY", typeset from six text-free
